@@ -15,12 +15,9 @@
             this ISpecificBenchmarkRunner runner,
             IEnumerable<IBenchmarkValidator> forValidators)
         { 
-            var estimate = runner.GetRunEstimate(forValidators);
-            Console.WriteLine("running with argument: " + estimate.RunParameters.DesiredMaxLatency);
-            Console.WriteLine("Hit enter to continue");
-            Console.ReadLine();
-            return runner.RunBenchmark(estimate.RunParameters);
-            //return runner.RunBenchmark(new BenchmarkRunParameters(TimeSpan.FromSeconds(1)));
+            //var estimate = runner.GetRunEstimate(forValidators);
+            //return runner.RunBenchmark(estimate.RunParameters);
+            return runner.RunBenchmark(new BenchmarkRunParameters(TimeSpan.FromSeconds(1)));
         }
 
         public static BenchmarkResults RunBenchmark<TBenchmarkContainer>(

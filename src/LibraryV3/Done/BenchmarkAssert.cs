@@ -40,7 +40,7 @@
             var sb = new StringBuilder();
             foreach (ValidationResult validationResult in validationResults)
             {
-                sb.AppendLine($"{validationResult.Validator?.GetType()} validation for {validationResult.TestCase} -- {(validationResult.IsViolation ? "failed" : "passed")} with message:");
+                sb.AppendLine($"{validationResult.Validator?.GetType()} validation for {validationResult.TestCase.DisplayInfo} -- {(validationResult.IsViolation ? "failed" : "passed")} with message:");
                 sb.AppendLine(
                     string.Join(
                         "\r\n",
