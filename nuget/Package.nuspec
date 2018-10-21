@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>BenchmarkDotNet.UnitTesting</id>
+    <version>0.1</version>
+    <authors>ndrwrbgs</authors>
+    <owners>ndrwrbgs</owners>
+    <licenseUrl>https://github.com/ndrwrbgs/BenchmarkDotNet.UnitTesting/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/ndrwrbgs/BenchmarkDotNet.UnitTesting</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/dotnet/BenchmarkDotNet/master/docs/guide/logo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Utilities for using BenchmarkDotNet in common unit testing frameworks</description>
+    <releaseNotes>Initial version</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>benchmark benchmarking performance unittest testing</tags>
+    <dependencies>
+      <dependency id="BenchmarkDotNet" version="0.11.1" />
+    </dependencies>
+  </metadata>
+</package>
