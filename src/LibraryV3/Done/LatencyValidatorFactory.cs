@@ -16,7 +16,7 @@
         public static IBenchmarkValidator FailIfCanSaySlowerThan(double confidenceLevel)
         {
             return Builder
-                .IfSlowerThan(confidenceLevel, then: LatencyValidatorBehavior.Fail)
+                .IfTreatmentSlowerThanBaseline(confidenceLevel, then: LatencyValidatorBehavior.Fail)
                 .Otherwise(LatencyValidatorBehavior.Pass);
         }
         
@@ -24,7 +24,7 @@
         public static IBenchmarkValidator PassOnlyIfFasterThan(double withConfidenceLevel)
         {
             return Builder
-                .IfFasterThan(withConfidenceLevel, then: LatencyValidatorBehavior.Pass)
+                .IfTreatmentFasterThanBaseline(withConfidenceLevel, then: LatencyValidatorBehavior.Pass)
                 .Otherwise(LatencyValidatorBehavior.Fail);
         }
         
@@ -32,7 +32,7 @@
         public static IBenchmarkValidator FailIfCannotSayFasterThan(double withConfidenceLevel)
         {
             return Builder
-                .IfFasterThan(withConfidenceLevel, then: LatencyValidatorBehavior.Pass)
+                .IfTreatmentFasterThanBaseline(withConfidenceLevel, then: LatencyValidatorBehavior.Pass)
                 .Otherwise(LatencyValidatorBehavior.Fail);
         }
 

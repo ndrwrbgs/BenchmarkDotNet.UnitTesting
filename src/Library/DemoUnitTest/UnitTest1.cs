@@ -6,6 +6,7 @@ namespace DemoUnitTest
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Linq.Expressions;
     using BenchmarkDotNet.Attributes;
     using LibraryV3;
 
@@ -19,17 +20,17 @@ namespace DemoUnitTest
         {
             // # Arrange
             IBenchmarkValidator validator = LatencyValidatorFactory.Builder
-                .IfFasterThan(withConfidenceLevel: 0.99, then: LatencyValidatorBehavior.Pass)
+                .IfTreatmentFasterThanBaseline(withConfidenceLevel: 0.99, then: LatencyValidatorBehavior.Pass)
                 .Otherwise(LatencyValidatorBehavior.Fail);
             var validators = new[] { validator };
             
             // # Act
-            ISpecificBenchmarkRunner runnerForString = benchmarkRunner.ForBenchmarkContainer<ArrayEnumerationIsFaster_Benchmarks>();
+            ISpecificBenchmarkRunner runner = benchmarkRunner.ForBenchmarkContainer<ArrayEnumerationIsFaster_Benchmarks>();
 
             // Not strictly necessary
             // TODO: We should change how RunBenchmark is called to incorporate limits on how much time we are willing to spend
             //{
-            //    BenchmarkRunEstimate runEstimate = runnerForString.GetRunEstimate(validators);
+            //    BenchmarkRunEstimate runEstimate = runner.GetRunEstimate(validators);
 
             //    if (runEstimate.EstimatedTime > TimeSpan.FromMinutes(2))
             //    {
@@ -37,7 +38,7 @@ namespace DemoUnitTest
             //    }
             //}
 
-            BenchmarkResults benchmarkResults = runnerForString.RunBenchmark(forValidators: validators);
+            BenchmarkResults benchmarkResults = runner.RunBenchmark(forValidators: validators);
 
             BenchmarkAssert.ValidatorsPassed(
                 validators,
@@ -76,20 +77,43 @@ namespace DemoUnitTest
         public void EnumerableEnumerationIsFaster()
         {
             // # Arrange
+            ISpecificBenchmarkRunner runner = benchmarkRunner/*Factory? Context? TODO*/
+                .For(
+                    baseline: (EnumerableEnumerationIsFaster_Benchmarks container) => container.ListEnumeration(),
+                    treatment: (EnumerableEnumerationIsFaster_Benchmarks container) => container.EnumerableEnumeration());
+
             IBenchmarkValidator validator = LatencyValidatorFactory.Builder
-                .IfFasterThan(withConfidenceLevel: 0.99, then: LatencyValidatorBehavior.Pass)
+                // treatment: EnumerableEnumeration <slower than> baseline: ListEnumeration
+                .IfTreatmentSlowerThanBaseline(withConfidenceLevel: 0.9999, then: LatencyValidatorBehavior.Pass)
                 .Otherwise(LatencyValidatorBehavior.Fail);
-            var validators = new[] { validator };
-            
+
             // # Act
-            ISpecificBenchmarkRunner runnerForString = benchmarkRunner.ForBenchmarkContainer<EnumerableEnumerationIsFaster_Benchmarks>();
+            BenchmarkResults benchmarkResults = runner.RunBenchmark(
+                // TODO: Would 'sampleSizeDeterminers' be better? I mean, THAT name is horrible, but more accurate
+                forValidator: validator);
 
-            BenchmarkResults benchmarkResults = runnerForString.RunBenchmark(forValidators: validators);
-
+            // # Assert
             BenchmarkAssert.ValidatorsPassed(
-                validators,
+                new [] { validator },
                 benchmarkResults,
                 assertFailDelegate: Assert.Fail);
+
+
+
+            // NOTE - same as above, more succinctly...
+            DefaultBenchmarkRunner.Instance
+                .For(
+                    baseline: (EnumerableEnumerationIsFaster_Benchmarks container) => container.ListEnumeration(),
+                    treatment: (EnumerableEnumerationIsFaster_Benchmarks container) => container.EnumerableEnumeration())
+                // TODO: Would rather Run() and then Assert(), but both require the arguments right now so wouldn't be able to do that in-line reading like a sentence
+                // We are trying to represent...
+                // "For baseline ListEnumeration and treatment EnumerableEnumeration if treatment is slower than baseline with confidence level 0.9999 then pass
+                //  otherwise fail by calling Assert.Fail()"
+                .RunWithValidatorAndAssertPassed(
+                    LatencyValidatorFactory.Builder
+                        .IfTreatmentSlowerThanBaseline(withConfidenceLevel: 0.9999, then: LatencyValidatorBehavior.Pass)
+                        .Otherwise(LatencyValidatorBehavior.Fail),
+                    assertFailDelegate: Assert.Fail);
         }
 
         public class EnumerableEnumerationIsFaster_Benchmarks
