@@ -16,7 +16,7 @@
         public static IBenchmarkValidator FailIfCanSaySlowerThan(double confidenceLevel)
         {
             return Builder
-                .IfTreatmentSlowerThanBaseline(confidenceLevel, then: LatencyValidatorBehavior.Fail)
+                .IfTreatmentSlowerThanBaseline(byAtLeast: 0.Percent(), withConfidenceLevel: confidenceLevel, then: LatencyValidatorBehavior.Fail)
                 .Otherwise(LatencyValidatorBehavior.Pass);
         }
         

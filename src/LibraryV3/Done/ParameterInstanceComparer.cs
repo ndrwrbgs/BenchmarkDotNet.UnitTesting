@@ -13,7 +13,7 @@
 
         public int GetHashCode(ParameterInstance obj)
         {
-            return obj.Value.GetHashCode();
+            return obj.Value?.GetHashCode() ?? 0;
         }
     }
 }

@@ -10,9 +10,26 @@ namespace LibraryV3
     using Accord.Statistics.Testing;
     using Accord.Statistics.Testing.Power;
     using BenchmarkDotNet.Parameters;
-    using BenchmarkDotNet.Reports;
-    using BenchmarkDotNet.Validators;
-    using MoreLinq;
+
+    public struct Percent
+    {
+        public double Value { get; }
+
+        public double Multiplier => this.Value / 100.0;
+
+        public Percent(double value)
+        {
+            this.Value = value;
+        }
+    }
+
+    public static class PercentEx
+    {
+        public static Percent Percent(this int input)
+        {
+            return new Percent(input);
+        }
+    }
 
     public sealed class LatencyValidatorBuilder
     {
@@ -36,11 +53,14 @@ namespace LibraryV3
                     .ToList());
         }
 
-        public LatencyValidatorBuilder IfTreatmentSlowerThanBaseline(double withConfidenceLevel, LatencyValidatorBehavior then)
+        public LatencyValidatorBuilder IfTreatmentSlowerThanBaseline(
+            Percent byAtLeast,
+            double withConfidenceLevel,
+            LatencyValidatorBehavior then)
         {
             return new LatencyValidatorBuilder(
                 this.steps
-                    .Append(new BuilderStep(BuilderStepType.IfSlowerThan, withConfidenceLevel, then))
+                    .Append(new BuilderStep(BuilderStepType.IfSlowerThan, withConfidenceLevel, then, byAtLeast))
                     .ToList());
         }
 
@@ -79,7 +99,8 @@ namespace LibraryV3
                                 validator = (IBenchmarkValidator)
                                     new IfSlowerThanValidator(
                                         // TODO: P3 - Pass in things like the detectable difference and power?
-                                        modifiedAlpha),
+                                        modifiedAlpha,
+                                        byAtLeast: step.ByAtLeast),
                                 ifViolation = step.Behavior
                             };
                         default:
@@ -182,12 +203,14 @@ namespace LibraryV3
 
         private sealed class BuilderStep
         {
+            public Percent ByAtLeast { get; }
             public BuilderStepType StepType { get; }
             public double ConfidenceLevel { get; }
             public LatencyValidatorBehavior Behavior { get; }
 
-            public BuilderStep(BuilderStepType stepType, double confidenceLevel, LatencyValidatorBehavior behavior)
+            public BuilderStep(BuilderStepType stepType, double confidenceLevel, LatencyValidatorBehavior behavior, Percent byAtLeast = default(Percent))
             {
+                this.ByAtLeast = byAtLeast;
                 this.StepType = stepType;
                 this.ConfidenceLevel = confidenceLevel;
                 this.Behavior = behavior;
@@ -396,16 +419,19 @@ namespace LibraryV3
         private readonly double alpha;
         private readonly double minimumDetectableDifferenceDesired;
         private readonly double testStatisticalPower;
+        private readonly Percent byAtLeast;
 
         public IfSlowerThanValidator(
             double alpha,
             // TODO: P2 - per the link, appears this may be the number of standard deviations? http://accord-framework.net/docs/html/T_Accord_Statistics_Testing_Power_TwoSampleTTestPowerAnalysis.htm
             double minimumDetectableDifferenceDesired = 0.00001, // Some number larger than 0
-            double testStatisticalPower = 0.8) // the test power that we want. 0.8 is a standard - 0.9 is more conservative -- 1 - probability of rejecting the null hypothesis when the null hypothesis is actually false
+            double testStatisticalPower = 0.8, // the test power that we want. 0.8 is a standard - 0.9 is more conservative -- 1 - probability of rejecting the null hypothesis when the null hypothesis is actually false
+            Percent byAtLeast = default(Percent))
         {
             this.alpha = alpha;
             this.minimumDetectableDifferenceDesired = minimumDetectableDifferenceDesired;
             this.testStatisticalPower = testStatisticalPower;
+            this.byAtLeast = byAtLeast;
         }
 
         public IEnumerable<ValidationResult> GetValidationResults(BenchmarkResults results)
@@ -422,7 +448,12 @@ namespace LibraryV3
                 // TODO: We need to use hypothesizedDifference to ensure that we don't say an item is faster
                 // when it is statistically faster but also statistically the same - aka practically insignificant
                 // TODO: We could use something like a measurement of how long 'nothing' takes on the machine, take as parameter, or hard code a sane value like here.
-                var hypothesizedDifference = 0.1;
+                //var hypothesizedDifference = 0.1;
+
+                // observed: baseline - treatment -- we are saying First<Second so baseline - treatment should be negative
+                var hypothesizedDifference = resultMeasurement.Baseline.ResultStatistics.Mean * -this.byAtLeast.Multiplier;
+
+                double observedDifference = 0;
 
                 if (resultMeasurement.Baseline.ResultStatistics.N < 30 ||
                     resultMeasurement.Treatment.ResultStatistics.N < 30)
@@ -436,8 +467,9 @@ namespace LibraryV3
                         // AKA: Baseline < Treatment
                         alternate: alternateHypothesis);
                     
+                    test.Size = this.alpha;
                     isMatch = test.Significant;
-                    confidenceInterval = test.GetConfidenceInterval(this.alpha);
+                    confidenceInterval = test.GetConfidenceInterval(1 - this.alpha);
                 }
                 else
                 {
@@ -447,18 +479,28 @@ namespace LibraryV3
                         hypothesizedDifference: hypothesizedDifference,
                         // AKA: Baseline < Treatment
                         alternate: alternateHypothesis);
-                    
+
+                    test.Size = this.alpha;
                     isMatch = test.Significant;
-                    confidenceInterval = test.GetConfidenceInterval(this.alpha);
+                    confidenceInterval = test.GetConfidenceInterval(1 - this.alpha);
+
+                    observedDifference = test.ObservedDifference;
                 }
 
                 var confIntervalInMs = new DoubleRange(confidenceInterval.Min * 1e-6, confidenceInterval.Max * 1e-6);
 
+                var message =
+                    $"We {(isMatch ? "support" : "cannot support")} treatment > baseline (slower than) with Confidence Interval {confIntervalInMs} ms.\r\n" +
+                    $"Alpha: {this.alpha}.\r\n" +
+                    $"HypothesizedDifference: {hypothesizedDifference}.\r\n" +
+                    $"ObservedDifference: {observedDifference}\r\n" +
+                    $"Baseline mean: {resultMeasurement.Baseline.ResultStatistics.Mean}\r\n" +
+                    $"Treatment mean: {resultMeasurement.Treatment.ResultStatistics.Mean}";
+
                 yield return new ValidationResult(
                     parameterInstances,
                     this,
-                    // TODO: P4 - says support even if not support
-                    $"We support treatment > baseline (slower than) with Confidence Interval {confIntervalInMs} ms",
+                    message,
                     // TODO: P3 - We are abusing this type here... isViolation != isMatch
                     isViolation: isMatch);
             }

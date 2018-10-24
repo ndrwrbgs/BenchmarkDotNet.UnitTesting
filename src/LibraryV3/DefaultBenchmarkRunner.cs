@@ -10,6 +10,7 @@
     using BenchmarkDotNet.Mathematics;
     using BenchmarkDotNet.Parameters;
     using BenchmarkDotNet.Running;
+    using BenchmarkDotNet.Toolchains.CsProj;
 
     public sealed class DefaultBenchmarkRunner : IBenchmarkRunner
     {
@@ -145,6 +146,8 @@
                 int iterationCount = 100; // >30 to use z test
 
                 job = job.WithIterationCount(iterationCount);
+
+                //job = job.With(CsProjClassicNetToolchain.Net46);
 
                 // would rather not have this, but it allows us to have fast unit tests (at the cost of confidence/ False-Positives(Passing))
                 var iterationTimeInMilliseconds = desiredMaxLatency.TotalMilliseconds / iterationCount;
