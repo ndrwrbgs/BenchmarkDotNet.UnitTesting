@@ -15,7 +15,7 @@
             // # Arrange
             IBenchmarkValidator validator = LatencyValidatorFactory.Builder
                 //.IfTreatmentSlowerThanBaseline(withConfidenceLevel: 0.99, then: LatencyValidatorBehavior.Fail)
-                .IfTreatmentFasterThanBaseline(withConfidenceLevel: 0.95, then: LatencyValidatorBehavior.Pass)
+                .IfTreatmentFasterThanBaseline(byAtLeast: 0.Percent(), withConfidenceLevel: 0.95, then: LatencyValidatorBehavior.Pass)
                 .Otherwise(LatencyValidatorBehavior.Fail);
             var validators = new[] { validator };
             

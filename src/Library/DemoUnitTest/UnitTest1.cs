@@ -52,7 +52,7 @@ namespace DemoUnitTest
         {
             // # Arrange
             IBenchmarkValidator validator = LatencyValidatorFactory.Builder
-                .IfTreatmentFasterThanBaseline(withConfidenceLevel: 0.99, then: LatencyValidatorBehavior.Pass)
+                .IfTreatmentFasterThanBaseline(byAtLeast: 10.Percent(), withConfidenceLevel: 0.99, then: LatencyValidatorBehavior.Pass)
                 .Otherwise(LatencyValidatorBehavior.Fail);
             var validators = new[] { validator };
             

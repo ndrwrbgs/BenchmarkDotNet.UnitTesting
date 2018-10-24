@@ -45,11 +45,13 @@ namespace LibraryV3
             this.steps = new BuilderStep[0];
         }
 
-        public LatencyValidatorBuilder IfTreatmentFasterThanBaseline(double withConfidenceLevel, LatencyValidatorBehavior then)
+        public LatencyValidatorBuilder IfTreatmentFasterThanBaseline(
+            Percent byAtLeast,
+            double withConfidenceLevel, LatencyValidatorBehavior then)
         {
             return new LatencyValidatorBuilder(
                 this.steps
-                    .Append(new BuilderStep(BuilderStepType.IfFasterThan, withConfidenceLevel, then))
+                    .Append(new BuilderStep(BuilderStepType.IfFasterThan, withConfidenceLevel, then, byAtLeast))
                     .ToList());
         }
 
@@ -490,7 +492,7 @@ namespace LibraryV3
                 var confIntervalInMs = new DoubleRange(confidenceInterval.Min * 1e-6, confidenceInterval.Max * 1e-6);
 
                 var message =
-                    $"We {(isMatch ? "support" : "cannot support")} treatment > baseline (slower than) with Confidence Interval {confIntervalInMs} ms.\r\n" +
+                    $"We {(isMatch ? "support" : "cannot support")} treatment > baseline (slower than) by {this.byAtLeast.Multiplier:P0} with Confidence Interval {confIntervalInMs} ms.\r\n" +
                     $"Alpha: {this.alpha}.\r\n" +
                     $"HypothesizedDifference: {hypothesizedDifference}.\r\n" +
                     $"ObservedDifference: {observedDifference}\r\n" +
