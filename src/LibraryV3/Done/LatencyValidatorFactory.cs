@@ -1,4 +1,6 @@
-﻿namespace LibraryV3
+﻿using BenchmarkDotNet.Horology;
+
+namespace LibraryV3
 {
     using JetBrains.Annotations;
 
@@ -13,10 +15,18 @@
         #region Factory methods for common patterns
 
         [PublicAPI]
-        public static IBenchmarkValidator FailIfCanSaySlowerThan(double confidenceLevel)
+        public static IBenchmarkValidator FailIfCanSaySlowerThan(double confidenceLevel, Percent byAtLeast)
         {
             return Builder
-                .IfTreatmentSlowerThanBaseline(byAtLeast: 0.Percent(), withConfidenceLevel: confidenceLevel, then: LatencyValidatorBehavior.Fail)
+                .IfTreatmentSlowerThanBaseline(byAtLeast: byAtLeast, withConfidenceLevel: confidenceLevel, then: LatencyValidatorBehavior.Fail)
+                .Otherwise(LatencyValidatorBehavior.Pass);
+        }
+
+        [PublicAPI]
+        public static IBenchmarkValidator FailIfCanSaySlowerThan(double confidenceLevel, TimeInterval byAtLeast)
+        {
+            return Builder
+                .IfTreatmentSlowerThanBaseline(byAtLeast: byAtLeast, withConfidenceLevel: confidenceLevel, then: LatencyValidatorBehavior.Fail)
                 .Otherwise(LatencyValidatorBehavior.Pass);
         }
         

@@ -17,7 +17,7 @@
 
         public Type BenchmarkClass {get;}
 
-        public BenchmarkRunEstimate GetRunEstimate(IEnumerable<IBenchmarkValidator> validators)
+        public BenchmarkRunEstimate GetRunEstimate(IEnumerable<ISampleSizeDeterminer> sampleSizeDeterminers)
         {
             var genericMethod = typeof(IBenchmarkRunner)
                 .GetMethod(nameof(IBenchmarkRunner.GetRunEstimate));
@@ -25,7 +25,7 @@
             var method = genericMethod
                 .MakeGenericMethod(this.BenchmarkClass);
 
-            var result = method.Invoke(this.runner, parameters: new object[] {validators});
+            var result = method.Invoke(this.runner, parameters: new object[] {sampleSizeDeterminers});
 
             var castResult = (BenchmarkRunEstimate) result;
 

@@ -9,44 +9,15 @@ namespace DemoUnitTest
     using System.Linq.Expressions;
     using Accord.Statistics.Testing;
     using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Environments;
+    using BenchmarkDotNet.Jobs;
     using LibraryV3;
 
     [TestClass]
     public class UnitTest1
     {
-        static IBenchmarkRunner benchmarkRunner = DefaultBenchmarkRunner.Instance;
-
-        [TestMethod]
-        public void Test()
-        {
-            foreach (var alt in new[]
-            {
-                TwoSampleHypothesis.ValuesAreDifferent,
-                TwoSampleHypothesis.FirstValueIsGreaterThanSecond,
-                TwoSampleHypothesis.FirstValueIsSmallerThanSecond
-            })
-            {
-                foreach (double hyp in new[] {0, -0.1, 0.1, -100, 100})
-                {
-                    var test = new TwoSampleZTest(
-                        new double[] {1, 1, 2,},
-                        new double[] {100, 100, 300},
-                        hypothesizedDifference: hyp,
-                        alternate: alt);
-
-                    // Observed is sample1 - sample2
-
-                    // TRUES:
-                    // ValuesAreDifferent -100  - we can reject that sample1 - sample2 == -100
-                    // ValuesAreDifferent 100   - we can reject that sample1 - sample2 == 100
-                    // FirstGreater -100        - we can reject sample1 + -100 > sample2
-                    // FirstSmaller 100         - we can reject sample1 +  100 < sample2
-
-                    Console.WriteLine($"{alt} at {hyp:N2}\t{test.Significant}\t{test.ObservedDifference}\t{test.Confidence.ToString()}");
-                }
-            }
-        }
-
+        static IBenchmarkRunner benchmarkRunner = new DefaultBenchmarkRunner(job => job.With(Jit.LegacyJit));
+        
         [TestMethod]
         public void ArrayEnumerationIsFaster()
         {

@@ -13,7 +13,7 @@
     {
         Type BenchmarkClass { get; }
 
-        BenchmarkRunEstimate GetRunEstimate(IEnumerable<IBenchmarkValidator> validators);
+        BenchmarkRunEstimate GetRunEstimate(IEnumerable<ISampleSizeDeterminer> sampleSizeDeterminers);
         BenchmarkResults RunBenchmark(BenchmarkRunParameters runParameters);
     }
 }

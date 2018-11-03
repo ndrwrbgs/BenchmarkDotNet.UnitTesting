@@ -1,6 +1,8 @@
 ﻿namespace LibraryV3
 {
+    using System;
     using System.Collections.Generic;
+    using BenchmarkDotNet.Jobs;
 
     /// <summary>
     /// Reuse as much as possible, as it may cache information and reduce runtime.
@@ -8,7 +10,7 @@
     /// </summary>
     public interface IBenchmarkRunner
     {
-        BenchmarkRunEstimate GetRunEstimate<TBenchmarkContainer>(IEnumerable<IBenchmarkValidator> validators);
+        BenchmarkRunEstimate GetRunEstimate<TBenchmarkContainer>(IEnumerable<ISampleSizeDeterminer> sampleSizeDeterminers);
         BenchmarkResults RunBenchmark<TBenchmarkContainer>(BenchmarkRunParameters runParameters);
     }
 }

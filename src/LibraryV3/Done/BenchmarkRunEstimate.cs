@@ -8,15 +8,15 @@
     {
         public TimeSpan EstimatedTime { get; }
 
-        public IReadOnlyDictionary<IBenchmarkValidator, TimeSpan> EstimatedTimeByValidator { get; }
+        public IReadOnlyDictionary<ISampleSizeDeterminer, TimeSpan> EstimatedTimeBySource { get; }
 
         public BenchmarkRunParameters RunParameters { get; }
 
-        public BenchmarkRunEstimate(TimeSpan estimatedTime, BenchmarkRunParameters runParameters, IReadOnlyDictionary<IBenchmarkValidator, TimeSpan> estimatedTimeByValidator)
+        public BenchmarkRunEstimate(TimeSpan estimatedTime, BenchmarkRunParameters runParameters, IReadOnlyDictionary<ISampleSizeDeterminer, TimeSpan> estimatedTimeBySource)
         {
             this.EstimatedTime = estimatedTime;
             this.RunParameters = runParameters;
-            this.EstimatedTimeByValidator = estimatedTimeByValidator;
+            this.EstimatedTimeBySource = estimatedTimeBySource;
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿namespace LibraryV3
 {
     using System;
+    using BenchmarkDotNet.Configs;
+    using BenchmarkDotNet.Jobs;
 
     public sealed class BenchmarkRunParameters
     {

@@ -6,6 +6,7 @@
     using System.Linq.Expressions;
     using System.Reflection;
     using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Jobs;
 
     public static class BenchmarkRunnerExtensions
     {
@@ -52,16 +53,17 @@
             this ISpecificBenchmarkRunner runner,
             IEnumerable<IBenchmarkValidator> forValidators)
         { 
-            //var estimate = runner.GetRunEstimate(forValidators);
+            // TODO: Restore this
+            //var estimate = runner.GetRunEstimate(forSampleSizeDeterminers);
             //return runner.RunBenchmark(estimate.RunParameters);
             return runner.RunBenchmark(new BenchmarkRunParameters(TimeSpan.FromSeconds(1)));
         }
 
         public static BenchmarkResults RunBenchmark<TBenchmarkContainer>(
             this IBenchmarkRunner runner,
-            IEnumerable<IBenchmarkValidator> forValidators)
+            IEnumerable<ISampleSizeDeterminer> forSampleSizeDeterminers)
         {
-            var estimate = runner.GetRunEstimate<TBenchmarkContainer>(forValidators);
+            var estimate = runner.GetRunEstimate<TBenchmarkContainer>(forSampleSizeDeterminers);
             return runner.RunBenchmark<TBenchmarkContainer>(estimate.RunParameters);
         }
 
@@ -77,7 +79,7 @@
 
             var type = baselineMethod.DeclaringType;
 
-            var methodInfo = typeof(BenchmarkRunnerExtensions).GetMethod("ForBenchmarkContainer");
+            var methodInfo = typeof(BenchmarkRunnerExtensions).GetMethod(nameof(ForBenchmarkContainer));
             var gen = methodInfo.MakeGenericMethod(type);
             
             object target = null; // Because it's static
